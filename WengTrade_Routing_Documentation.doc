@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dokumentasi Routing & Integrasi Eksternal - WengTrade</title>
+    <style>
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            color: #333333;
+            line-height: 1.6;
+            margin: 40px;
+            background-color: #ffffff;
+        }
+        h1 {
+            color: #1a237e;
+            font-size: 26pt;
+            border-bottom: 2px solid #1a237e;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #283593;
+            font-size: 18pt;
+            margin-top: 30px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #303f9f;
+            font-size: 14pt;
+            margin-top: 20px;
+        }
+        h4 {
+            color: #3f51b5;
+            font-size: 12pt;
+            margin-top: 15px;
+        }
+        p, li {
+            font-size: 11pt;
+            text-align: justify;
+        }
+        ul, ol {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            font-size: 10pt;
+        }
+        th {
+            background-color: #3f51b5;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #dddddd;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #dddddd;
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background-color: #f1f3f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 9.5pt;
+        }
+        .note {
+            background-color: #e8eaf6;
+            border-left: 5px solid #3f51b5;
+            padding: 12px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+        .footer {
+            margin-top: 50px;
+            font-size: 9pt;
+            color: #777777;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Dokumentasi Routing & Integrasi Eksternal — WengTrade</h1>
+    <p><strong>Dibuat oleh:</strong> Antigravity AI Coding Assistant<br>
+    <strong>Tanggal:</strong> 12 Juni 2026<br>
+    <strong>Proyek:</strong> Crypto & Market Screener (WengTrade)</p>
+
+    <div class="note">
+        Dokumen ini dibuat khusus untuk memetakan arsitektur navigasi halaman (routing) internal serta daftar lengkap integrasi eksternal (API pihak ketiga, database, sensor perangkat, dan visualisasi chart) pada aplikasi WengTrade. File ini berformat dokumen (.doc) yang dapat dibuka secara langsung menggunakan Microsoft Word.
+    </div>
+
+    <h2>1. Alur & Klasifikasi Routing Internal (A ke B ke C)</h2>
+    <p>Aplikasi WengTrade menggunakan struktur navigasi berbasis status autentikasi di tingkat teratas, yang kemudian bercabang ke tata letak utama (tab navigasi) dan halaman detail.</p>
+
+    <h3>A. Tingkat A: Pintu Masuk & Autentikasi (Gatekeeper)</h3>
+    <p>Pintu masuk aplikasi dikendalikan oleh kelas <span class="code">AuthGate</span> (<span class="code">lib/screens/auth_gate.dart</span>) yang memantau status sesi user dari Supabase Auth secara real-time:</p>
+    <ul>
+        <li><strong>A ke B (Belum Login):</strong> Mengarahkan pengguna ke halaman <span class="code">AuthScreen</span>.</li>
+        <li><strong>A ke B (Sudah Login):</strong> Mengarahkan pengguna ke halaman utama <span class="code">MainLayout</span>.</li>
+    </ul>
+
+    <h3>B. Tingkat B: Dashboard & Tab Navigasi Utama</h3>
+    <p>Pada tingkat ini, pengguna berinteraksi dengan komponen navigasi dasar aplikasi:</p>
+    <ul>
+        <li><strong>AuthScreen (<span class="code">lib/screens/auth_screen.dart</span>):</strong> Mengelola form masuk (login) dan pendaftaran (register). Setelah masuk, status sesi di Supabase akan ter-update dan secara otomatis memicu <span class="code">AuthGate</span> memindahkan rute ke <span class="code">MainLayout</span>.</li>
+        <li><strong>MainLayout (<span class="code">lib/screens/main_layout.dart</span>):</strong> Menggunakan navigasi bawah (<span class="code">BottomNavigationBar</span>) untuk membagi aplikasi menjadi 4 halaman tab:
+            <ol>
+                <li><strong>HomeScreen:</strong> Halaman pemantau pasar global (Screener).</li>
+                <li><strong>EducationScreen:</strong> Pusat materi edukasi dan literasi keuangan.</li>
+                <li><strong>RiskCalculatorScreen:</strong> Kalkulator manajemen risiko trading.</li>
+                <li><strong>ProfileScreen:</strong> Halaman manajemen akun pengguna.</li>
+            </ol>
+        </li>
+    </ul>
+
+    <h3>C. Tingkat C: Halaman Detail & Fitur Lanjutan (Sub-Pages)</h3>
+    <p>Sub-halaman diakses melalui tindakan interaktif pengguna pada tingkat B:</p>
+    <ul>
+        <li><strong>DetailScreen (<span class="code">lib/screens/detail_screen.dart</span>):</strong> Dibuka dari <span class="code">HomeScreen</span> (B ke C) saat salah satu item instrumen pasar diklik. Halaman ini memuat widget bagan eksternal dan rincian harga. Tombol "Hitung Risiko" memicu kembali ke halaman asal (C ke B) dan mengarahkan ke tab kalkulator.</li>
+        <li><strong>MaterialDetailScreen (<span class="code">lib/screens/material_detail_screen.dart</span>):</strong> Dibuka dari <span class="code">EducationScreen</span> (B ke C) berdasarkan slug modul yang dipilih. Halaman ini memuat teks panduan dasar dalam bentuk Markdown dan menawarkan alur upgrade akun premium untuk membuka bagian terkunci.</li>
+        <li><strong>SearchScreen (<span class="code">lib/screens/search_screen.dart</span>):</strong> File pencarian global (belum diaktifkan di navigasi utama, tetapi telah siap pakai). Halaman ini berisi form pencarian komprehensif yang mengarahkan ke <span class="code">DetailScreen</span>.</li>
+    </ul>
+
+    <h3>Tabel Ringkasan Routing Internal</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Halaman Asal (Source)</th>
+                <th>Halaman Tujuan (Dest)</th>
+                <th>Mekanisme Navigasi</th>
+                <th>Trigger / Kondisi</th>
+                <th>File Code Asal</th>
+                <th>File Code Tujuan</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>main.dart</strong></td>
+                <td>AuthGate</td>
+                <td>Inisialisasi <span class="code">home</span></td>
+                <td>Aplikasi pertama kali dijalankan</td>
+                <td>lib/main.dart</td>
+                <td>lib/screens/auth_gate.dart</td>
+            </tr>
+            <tr>
+                <td><strong>AuthGate</strong></td>
+                <td>AuthScreen</td>
+                <td>StreamBuilder Re-render</td>
+                <td>Sesi Supabase kosong (belum login)</td>
+                <td>lib/screens/auth_gate.dart</td>
+                <td>lib/screens/auth_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>AuthGate</strong></td>
+                <td>MainLayout</td>
+                <td>StreamBuilder Re-render</td>
+                <td>Sesi Supabase aktif (sudah login)</td>
+                <td>lib/screens/auth_gate.dart</td>
+                <td>lib/screens/main_layout.dart</td>
+            </tr>
+            <tr>
+                <td><strong>MainLayout</strong></td>
+                <td>HomeScreen</td>
+                <td>BottomNavigationBar (Index 0)</td>
+                <td>Klik ikon tab 'Screener'</td>
+                <td>lib/screens/main_layout.dart</td>
+                <td>lib/screens/home_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>MainLayout</strong></td>
+                <td>EducationScreen</td>
+                <td>BottomNavigationBar (Index 1)</td>
+                <td>Klik ikon tab 'Edukasi'</td>
+                <td>lib/screens/main_layout.dart</td>
+                <td>lib/screens/education_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>MainLayout</strong></td>
+                <td>RiskCalculatorScreen</td>
+                <td>BottomNavigationBar (Index 2)</td>
+                <td>Klik ikon tab 'Kalkulator'</td>
+                <td>lib/screens/main_layout.dart</td>
+                <td>lib/screens/risk_calculator_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>MainLayout</strong></td>
+                <td>ProfileScreen</td>
+                <td>BottomNavigationBar (Index 3)</td>
+                <td>Klik ikon tab 'Profil'</td>
+                <td>lib/screens/main_layout.dart</td>
+                <td>lib/screens/profile_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>HomeScreen</strong></td>
+                <td>DetailScreen</td>
+                <td><span class="code">Navigator.push</span></td>
+                <td>Klik pada salah satu baris instrumen keuangan</td>
+                <td>lib/screens/home_screen.dart</td>
+                <td>lib/screens/detail_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>EducationScreen</strong></td>
+                <td>MaterialDetailScreen</td>
+                <td><span class="code">Navigator.push</span></td>
+                <td>Klik kartu modul materi pembelajaran</td>
+                <td>lib/screens/education_screen.dart</td>
+                <td>lib/screens/material_detail_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>ProfileScreen</strong></td>
+                <td>AuthGate</td>
+                <td><span class="code">SupabaseClient.auth.signOut()</span></td>
+                <td>Klik tombol "Keluar (Logout)"</td>
+                <td>lib/screens/profile_screen.dart</td>
+                <td>lib/screens/auth_gate.dart</td>
+            </tr>
+            <tr>
+                <td><strong>DetailScreen</strong></td>
+                <td>HomeScreen</td>
+                <td><span class="code">Navigator.pop</span></td>
+                <td>Klik tombol kembali / Hitung Risiko</td>
+                <td>lib/screens/detail_screen.dart</td>
+                <td>lib/screens/home_screen.dart</td>
+            </tr>
+            <tr>
+                <td><strong>SearchScreen</strong></td>
+                <td>DetailScreen</td>
+                <td><span class="code">Navigator.push</span></td>
+                <td>Klik item hasil pencarian (halaman cadangan)</td>
+                <td>lib/screens/search_screen.dart</td>
+                <td>lib/screens/detail_screen.dart</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2>2. Alur & Integrasi Routing Eksternal (API, WebViews, & Sensor Device)</h2>
+    <p>Aplikasi WengTrade berkomunikasi secara intensif dengan server eksternal, SDK, serta hardware native untuk menyediakan fungsi pelacakan pasar secara realtime dan autentikasi.</p>
+
+    <h3>A. Layanan Supabase Backend (Database & Autentikasi)</h3>
+    <p>Aplikasi menggunakan SDK resmi Supabase Flutter untuk menyimpan data user dan menarik materi pelajaran secara dinamis:</p>
+    <ul>
+        <li><strong>Supabase Auth:</strong> Mengelola register, login, session validation, dan logout secara terpusat di server cloud.</li>
+        <li><strong>Tabel <span class="code">profiles</span>:</strong> Digunakan untuk menyimpan koordinat GPS (latitude & longitude) beserta kota asal pengguna saat login, serta status kepemilikan akun premium (<span class="code">is_premium</span>).</li>
+        <li><strong>Tabel <span class="code">modules</span>:</strong> Menampung seluruh isi materi literasi keuangan. Data dipanggil secara dinamis menggunakan slug dan diurutkan berdasarkan kolom <span class="code">order_index</span>.</li>
+    </ul>
+
+    <h3>B. API Penyedia Data Pasar Keuangan</h3>
+    <p>Data harga aset ditarik secara berkala melalui HTTP GET menggunakan service <span class="code">ApiService</span>:</p>
+    <ul>
+        <li><strong>Finnhub API:</strong> Mengakses endpoint <span class="code">https://finnhub.io/api/v1/quote</span> untuk mengambil kutipan harga realtime saham S&P 500 Amerika Serikat dan harga cryptocurrency (data bersumber dari bursa Binance).</li>
+        <li><strong>Custom IHSG API:</strong> Mengakses endpoint <span class="code">https://wengtrade-ihsg.immanuel.my.id/idx-data</span>. Dikarenakan Finnhub tidak menyediakan data bursa Indonesia (IDX) secara gratis, WengTrade menarik data IHSG secara langsung melalui server perantara Python/Flask milik pengembang.</li>
+    </ul>
+
+    <h3>C. Integrasi Gerbang Pembayaran (Payment Gateway)</h3>
+    <p>Alur pembayaran premium memanfaatkan integrasi Xendit melalui API perantara:</p>
+    <ul>
+        <li><strong>Create Subscription API:</strong> Mengirimkan HTTP POST ke <span class="code">https://wengtrade-api.immanuel.my.id/create-subscription</span> dengan membawa data ID pengguna, email, dan nominal transaksi sebesar Rp 50.000.</li>
+        <li><strong>In-App WebView Pembayaran:</strong> Membuka URL checkout Xendit menggunakan paket <span class="code">url_launcher</span>. Halaman ditutup secara otomatis lewat fungsi <span class="code">closeInAppWebView()</span> begitu pendeteksi status pembayaran (polling database setiap 3 detik) melihat kolom <span class="code">is_premium</span> di Supabase berubah menjadi true.</li>
+    </ul>
+
+    <h3>D. Widget TradingView (Visualisasi Chart)</h3>
+    <p>Grafik harga di dalam <span class="code">DetailScreen</span> disajikan menggunakan widget visualisasi eksternal:</p>
+    <ul>
+        <li><strong>Mekanisme:</strong> Menggunakan paket <span class="code">flutter_inappwebview</span> untuk merender string HTML statis secara dinamis.</li>
+        <li><strong>Widget Library:</strong> Memanggil pustaka eksternal <span class="code">https://s3.tradingview.com/tv.js</span> di dalam dokumen HTML dan merender instansi chart interaktif berdasarkan kode simbol bursa keuangan (contoh: <span class="code">BINANCE:BTCUSD</span>, <span class="code">IDX:GOTO</span>, atau <span class="code">AAPL</span>).</li>
+    </ul>
+
+    <h3>E. Fitur Lokasi Native & Geocoding</h3>
+    <p>WengTrade mengakses fungsionalitas hardware native perangkat seluler:</p>
+    <ul>
+        <li><strong>GPS Perangkat:</strong> Memanfaatkan paket <span class="code">geolocator</span> untuk meminta izin sensor lokasi dan menarik koordinat latitude dan longitude terakurat perangkat pengguna.</li>
+        <li><strong>Geocoding:</strong> Menggunakan paket <span class="code">geocoding</span> untuk melakukan <i>reverse geocoding</i> (menerjemahkan koordinat lintang/bujur menjadi nama kota, kecamatan, atau daerah administratif terdekat).</li>
+    </ul>
+
+    <h3>Tabel Ringkasan Integrasi Eksternal</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Nama Layanan</th>
+                <th>Tipe Integrasi</th>
+                <th>Protokol / Library</th>
+                <th>URL Endpoint / Target</th>
+                <th>Fungsi / Output Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Supabase Auth</strong></td>
+                <td>SDK Autentikasi Cloud</td>
+                <td>HTTPS / WebSocket</td>
+                <td><span class="code">mfxgjcqjgcqpdmgrsxmj.supabase.co</span></td>
+                <td>Session management, sign up, sign in, dan log out pengguna</td>
+            </tr>
+            <tr>
+                <td><strong>Supabase Database</strong></td>
+                <td>SDK Database Relasional</td>
+                <td>HTTPS PostgREST API</td>
+                <td><span class="code">mfxgjcqjgcqpdmgrsxmj.supabase.co/rest/v1</span></td>
+                <td>Membaca tabel <span class="code">modules</span> & menyimpan lokasi ke tabel <span class="code">profiles</span></td>
+            </tr>
+            <tr>
+                <td><strong>Finnhub API</strong></td>
+                <td>REST Web API (External)</td>
+                <td>HTTPS GET</td>
+                <td><span class="code">api.finnhub.io/api/v1/quote</span></td>
+                <td>Harga real-time & change% 24 jam untuk Crypto dan Saham US (S&P 500)</td>
+            </tr>
+            <tr>
+                <td><strong>IHSG Custom API</strong></td>
+                <td>REST Web API (External)</td>
+                <td>HTTPS GET</td>
+                <td><span class="code">wengtrade-ihsg.immanuel.my.id/idx-data</span></td>
+                <td>Harga real-time saham-saham Indonesia (Bursa Efek Indonesia / IDX)</td>
+            </tr>
+            <tr>
+                <td><strong>Subscription API</strong></td>
+                <td>REST Web API (External)</td>
+                <td>HTTPS POST</td>
+                <td><span class="code">wengtrade-api.immanuel.my.id/create-subscription</span></td>
+                <td>Inisiasi link pembayaran premium melalui Xendit</td>
+            </tr>
+            <tr>
+                <td><strong>TradingView Widget</strong></td>
+                <td>Embedded Chart</td>
+                <td>HTML5 / JS Script</td>
+                <td><span class="code">https://s3.tradingview.com/tv.js</span></td>
+                <td>Chart interaktif lilin (candlestick) berserta indikator RSI dan MA</td>
+            </tr>
+            <tr>
+                <td><strong>Geolocator API</strong></td>
+                <td>Native Hardware GPS</td>
+                <td>Android/iOS SDK</td>
+                <td>Paket Flutter: <span class="code">geolocator</span></td>
+                <td>Mengambil data koordinat GPS (latitude, longitude) secara real-time</td>
+            </tr>
+            <tr>
+                <td><strong>Geocoding API</strong></td>
+                <td>Sistem Geocoding OS</td>
+                <td>Android/iOS SDK</td>
+                <td>Paket Flutter: <span class="code">geocoding</span></td>
+                <td>Menerjemahkan koordinat lintang/bujur menjadi nama Kota/Kabupaten</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Dokumentasi Routing & Integrasi Eksternal — WengTrade — 2026
+    </div>
+
+</body>
+</html>
